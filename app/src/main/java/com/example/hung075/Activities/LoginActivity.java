@@ -91,15 +91,15 @@ public class LoginActivity extends AppCompatActivity {
         String password = editTextPassword.getText().toString();
 
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
-        Query checkUser = reference.orderByChild("email").equalTo(email);
+        Query checkUsers = reference.orderByChild("username").equalTo(email);
 
-        checkUser.addListenerForSingleValueEvent(new ValueEventListener() {
+        checkUsers.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     editTextEmail.setError(null);
                     String passfromDB = snapshot.child(email).child("password").getValue(String.class);
-                    if(!Objects.equals(passfromDB, password)){
+                    if(password.equals(passfromDB)){
                         editTextEmail.setError(null);
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);

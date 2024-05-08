@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -15,8 +16,12 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.hung075.Domains.User;
 import com.example.hung075.R;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 public class RegisterActivity extends AppCompatActivity {
     EditText editTextName, editTextEmail, editTextPassword, editTextUsername;
@@ -42,11 +47,38 @@ public class RegisterActivity extends AppCompatActivity {
                     String password = editTextPassword.getText().toString();
                     User user = new User(name, email, username, password);
 
-                    reference.child(name).setValue(user);
+                    DatabaseReference reference1 = FirebaseDatabase.getInstance().getReference("users");
+                    Query checkUsers = reference1.orderByChild("username").equalTo(username);
+                    checkUsers.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if(snapshot.exists()){
+                                editTextUsername.setError("Username exist");
+                                editTextPassword.requestFocus();
+                                editTextEmail.requestFocus();
+                                editTextName.requestFocus();
+                            }
+                            else{
+                                editTextUsername.setError(null);
+                                reference.child(name).setValue(user);
 
-                    Toast.makeText(RegisterActivity.this, "You have signup successfully", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                    startActivity(intent);
+                                Toast.makeText(RegisterActivity.this, "You have signup successfully", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                                startActivity(intent);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+
+//                    reference.child(name).setValue(user);
+//
+//                    Toast.makeText(RegisterActivity.this, "You have signup successfully", Toast.LENGTH_SHORT).show();
+//                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+//                    startActivity(intent);
                 }
 
 
