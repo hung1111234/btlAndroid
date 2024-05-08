@@ -102,6 +102,13 @@ public class LoginActivity extends AppCompatActivity {
                     if(password.equals(passfromDB)){
                         editTextEmail.setError(null);
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+
+                        String name = snapshot.child(email).child("name").getValue(String.class);
+                        String email1 = snapshot.child(email).child("email").getValue(String.class);
+
+                        intent.putExtra("name", name);
+                        intent.putExtra("email", email1);
+
                         startActivity(intent);
                     }
                     else{
