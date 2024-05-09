@@ -60,7 +60,123 @@ public class MainActivity extends AppCompatActivity {
         textView3.setText(intent.getStringExtra("name"));
         textView4.setText(intent.getStringExtra("email"));
 
+        initBanner();
+        initTopMoving();
+        initUpcomming();
+    }
+    private void initUpcomming() {
+        DatabaseReference myRef = database.getReference("Upcomming");
+        binding.progressBarUpcoming.setVisibility(View.VISIBLE);
+        ArrayList<Film> items = new ArrayList<>();
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    for (DataSnapshot issue : snapshot.getChildren()) {
+                        items.add(issue.getValue(Film.class));
+                    }
+                    if (!items.isEmpty()) {
+                        binding.recyclerViewUpcoming.setLayoutManager(new LinearLayoutManager(MainActivity.this,
+                                LinearLayoutManager.HORIZONTAL, false));
+                        binding.recyclerViewUpcoming.setAdapter(new FilmListAdapter(items));
+                    }
+                    binding.progressBarUpcoming.setVisibility(View.GONE);
+                }
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+    private void initTopMoving() {
+        DatabaseReference myRef = database.getReference("Items");
+        binding.progressBarTop.setVisibility(View.VISIBLE);
+        ArrayList<Film> items = new ArrayList<>();
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    for (DataSnapshot issue : snapshot.getChildren()) {
+                        items.add(issue.getValue(Film.class));
+                    }
+                    if (!items.isEmpty()) {
+                        binding.recyclerViewTopMovies.setLayoutManager(new LinearLayoutManager(MainActivity.this,
+                                LinearLayoutManager.HORIZONTAL, false));
+                        binding.recyclerViewTopMovies.setAdapter(new FilmListAdapter(items));
+                    }
+                    binding.progressBarTop.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
+    private void initBanner() {
+        DatabaseReference myRef = database.getReference("Banners");
+        binding.progressBarBanner.setVisibility(View.VISIBLE);
+        ArrayList<SliderItems> items = new ArrayList<>();
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    for (DataSnapshot issue : snapshot.getChildren()) {
+                        items.add(issue.getValue(SliderItems.class));
+                    }
+                    banners(items);
+                    binding.progressBarBanner.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    private void banners(ArrayList<SliderItems> items) {
+        binding.viewPager2.setAdapter(new SlidersAdapter(items, binding.viewPager2));
+        binding.viewPager2.setClipToPadding(false);
+        binding.viewPager2.setClipChildren(false);
+        binding.viewPager2.setOffscreenPageLimit(3);
+        binding.viewPager2.getChildAt(0).setOverScrollMode(RecyclerView.OVER_SCROLL_NEVER);
+
+        CompositePageTransformer compositePageTransformer = new CompositePageTransformer();
+        compositePageTransformer.addTransformer(new MarginPageTransformer(40));
+        compositePageTransformer.addTransformer(new ViewPager2.PageTransformer() {
+            @Override
+            public void transformPage(@NonNull View page, float position) {
+                float r = 1 - Math.abs(position);
+                page.setScaleY(0.85f + r * 0.15f);
+            }
+        });
+
+        binding.viewPager2.setPageTransformer(compositePageTransformer);
+        binding.viewPager2.setCurrentItem(1);
+        binding.viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                sliderHandler.removeCallbacks(sliderRunnable);
+            }
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sliderHandler.removeCallbacks(sliderRunnable);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sliderHandler.postDelayed(sliderRunnable, 2000);
+    }
 }
