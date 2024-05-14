@@ -36,7 +36,69 @@ public class DetailActivity extends AppCompatActivity {
         binding = ActivityDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        setVariable();
+
+        Window w = getWindow();
+        w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
     }
 
+    private void setVariable() {
+        Film item = (Film) getIntent().getSerializableExtra("object");
+        RequestOptions requestOptions = new RequestOptions();
+        requestOptions = requestOptions.transform(new CenterCrop(), new GranularRoundedCorners(0, 0, 50, 50));
+
+        Glide.with(this)
+                .load(item.getPoster())
+                .apply(requestOptions)
+                .into(binding.filmPic);
+
+        binding.titleTxt.setText(item.getTitle());
+        binding.imdbTxt.setText("IMDB " + item.getImdb());
+        binding.movieTimesTxt.setText(item.getYear() + " - " + item.getTime());
+        binding.movieSummery.setText(item.getDescription());
+
+        binding.watchTrailerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String id = item.getTrailer().replace("https://www.youtube.com/watch?v=", "");
+
+//                WebView webView = findViewById(R.id.webView);
+//                webView.getSettings().setJavaScriptEnabled(true);
+//                webView.loadUrl(id);
+
+                Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
+                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(item.getTrailer()));
+
+                try {
+                    startActivity(appIntent);
+                } catch (ActivityNotFoundException ex) {
+                    startActivity(webIntent);
+                }
+            }
+        });
+        binding.backImg.setOnClickListener(v -> finish());
+
+        float radius = 10f;
+        View decorView = getWindow().getDecorView();
+        ViewGroup rootView = (ViewGroup) decorView.findViewById(android.R.id.content);
+        Drawable windowsBackground = decorView.getBackground();
+
+        binding.blurView.setupWith(rootView, new RenderScriptBlur(this))
+                .setFrameClearDrawable(windowsBackground)
+                .setBlurRadius(radius);
+        binding.blurView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+        binding.blurView.setClipToOutline(true);
+
+        if (item.getGenre() != null) {
+            binding.genreView.setAdapter(new CategoryEachFilmAdapter(item.getGenre()));
+            binding.genreView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        }
+
+        if (item.getCasts() != null) {
+            binding.CastView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+            binding.CastView.setAdapter(new CastListAdapter(item.getCasts()));
+        }
+    }
 }
